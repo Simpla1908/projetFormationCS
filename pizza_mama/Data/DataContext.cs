@@ -9,6 +9,17 @@ namespace pizza_mama.Data
         {
         }
         public DbSet<Pizza> Pizzas { get; set; }
+        public DbSet<Utilisateur> Utilisateurs { get; set; }
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Pizza>()
+                .HasOne(p => p.Utilisateur)
+                .WithMany(u => u.Pizzas)
+                .HasForeignKey(p => p.UtilisateurId);
+        }
+
     }
 
 }

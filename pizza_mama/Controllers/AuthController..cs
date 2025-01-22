@@ -8,6 +8,8 @@ using System.Text;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using pizza_mama.Data;
 using pizza_mama.Models;
+using Microsoft.Extensions.Configuration;
+using System.Configuration;
 
 namespace pizza_mama.Controllers
 {
@@ -16,10 +18,14 @@ namespace pizza_mama.Controllers
     public class AuthController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(DataContext context)
+
+        public AuthController(DataContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
+
         }
 
         // Méthode pour enregistrer un nouvel utilisateur
@@ -55,11 +61,13 @@ namespace pizza_mama.Controllers
 
             // Création du JWT
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes("CléSecrèteJWTTrèsLongue1234567890123456");
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, user.Email) }),
                 Expires = DateTime.UtcNow.AddHours(1),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);

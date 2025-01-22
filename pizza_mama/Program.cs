@@ -1,48 +1,67 @@
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using pizza_mama.Data;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 
-namespace pizza_mama
-{
-    public class Program
+var builder = WebApplication.CreateBuilder(args);
+
+// Configuration de l'authentification JWT
+var key = builder.Configuration.GetValue<string>("Jwt:Secret"); // Clé secrète pour signer le JWT
+var issuer = builder.Configuration.GetValue<string>("Jwt:Issuer"); // Émetteur du JWT
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        public static void Main(string[] args)
+        options.RequireHttpsMetadata = false; // Utilise true en production
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            //CreateHostBuilder(args).Build().Run();
-            var host = CreateHostBuilder(args).Build();
-            CreateDbIfNotExists(host);
-            host.Run();
-        }
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+            ClockSkew = TimeSpan.Zero, // Permet une expiration plus stricte
+            ValidIssuer = issuer,
+            ValidAudience = issuer
+        };
+    });
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+// Configuration de la base de données
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-        private static void CreateDbIfNotExists(IHost host)
-        {
-            using (var scope = host.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider; try
-                {
-                    var context = services.GetRequiredService<DataContext>();
-                    context.Database.EnsureCreated();
-                }
-                catch (Exception ex)
-                {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred creating the DB.");
-                }
-            }
-        }
-    }
+builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+
+var app = builder.Build();
+
+// Configuration du pipeline HTTP
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
 }
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts(); // HSTS pour renforcer la sécurité
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+// Utilisation de l'authentification et de l'autorisation
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapRazorPages();
+app.MapControllers();
+
+app.Run();

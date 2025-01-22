@@ -20,11 +20,10 @@ namespace pizza_mama.Models
         [Display(Name = "Végétarienne")]
         public bool vegetarienne { get; set; }
         [Display(Name = "Ingrédients")]
-        [JsonIgnore]
         public string ingredients { get; set; }
 
         [NotMapped]
-        [JsonPropertyName("ingredients")]
+        [JsonPropertyName("listIngredients")]
         public string[] listeIngredients
         {
             get

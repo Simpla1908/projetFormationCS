@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using pizza_mama.Data;
 using pizza_mama.Models;
 using System.Linq;
@@ -7,6 +8,8 @@ namespace pizza_mama.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
+
     public class PizzaController : ControllerBase
     {
         private readonly DataContext _context;

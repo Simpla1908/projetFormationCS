@@ -1,0 +1,18 @@
+# Ignorer les fichiers générés par Visual Studio
+.vs/
+.vscode/
+.idea/
+
+# Ignorer les fichiers binaires de build
+bin/
+obj/
+
+# Ignorer les fichiers de configuration spécifiques à l'utilisateur
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Ignorer les fichiers de configuration de l'environnement .NET
+project.lock.json
+project.fragment.lock.json
